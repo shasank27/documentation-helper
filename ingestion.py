@@ -31,8 +31,45 @@ def ingest_docs():
     PineconeVectorStore.from_documents(documents, embeddings, index_name = "langchain-doc-index")
     print("*** Loading done ***")
 
+def ingest_docs2():
+    from langchain_community.document_loaders import FireCrawlLoader
+    langchain_docs_base_url = [
+        "https://python.langchain.com/docs/concepts/chat_models/",
+        "https://python.langchain.com/docs/concepts/messages/",
+        "https://python.langchain.com/docs/concepts/prompt_templates/",
+        "https://python.langchain.com/docs/concepts/example_selectors/",
+        "https://python.langchain.com/docs/concepts/output_parsers/",
+        "https://python.langchain.com/docs/concepts/document_loaders/",
+        "https://python.langchain.com/docs/concepts/text_splitters/",
+        "https://python.langchain.com/docs/concepts/embedding_models/",
+        "https://python.langchain.com/docs/concepts/vector_stores/",
+        "https://python.langchain.com/docs/concepts/retrievers/",
+        "https://python.langchain.com/docs/concepts/tools/",
+        "https://python.langchain.com/docs/concepts/agents/",
+        "https://python.langchain.com/docs/concepts/callbacks/"
+    ]
+    langchain_docs_base_url2 = langchain_docs_base_url[0:1]
+    for url in langchain_docs_base_url2:
+        print(f"Firecrawling {url=}")
+        loader = FireCrawlLoader(
+            url=url,
+            mode="crawl",
+            params={
+                "crawlerOptions":{"limit": 5},
+                "pageOptions": {"onlyMainContent": True},
+                "wait_until_done": True,
+            }
+        )
+
+        docs = loader.load()
+        print(f"Going to add {len(docs)} documents to Pinecone")
+        PineconeVectorStore.from_documents(
+            docs, embeddings, index_name="firecrawl-index"
+        )
+        print("*** Done ***")
+
 if __name__ == "__main__":
-    ingest_docs()
+    ingest_docs2()
 
     # llm = ChatGoogleGenerativeAI(temperature= 0, model="gemini-2.0-flash")
     
