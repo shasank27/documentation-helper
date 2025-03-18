@@ -7,6 +7,7 @@ from langchain_pinecone import PineconeVectorStore
 from langchain import hub
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains.retrieval import create_retrieval_chain
+from langchain.chains.history_aware_retriever import create_history_aware_retriever
 from langchain_core.runnables import RunnablePassthrough
 
 def run_llm(query: str, chat_history: List[Dict[str, Any]] = []):
@@ -16,11 +17,15 @@ def run_llm(query: str, chat_history: List[Dict[str, Any]] = []):
 
     retrieval_qa_chat_prompt = hub.pull("langchain-ai/retrieval-qa-chat")
     combine_docs_chain = create_stuff_documents_chain(llm, retrieval_qa_chat_prompt)
-    qa = create_retrieval_chain(retriever=docsearch.as_retriever(), combine_docs_chain = combine_docs_chain)
 
     rephrase_prompt = hub.pull("langchain-ai/chat-langchain-rephrase")
+    history_aware_retriever = create_history_aware_retriever(
+        llm = llm, retriever=docsearch.as_retriever(), prompt= rephrase_prompt
+    )
 
-    result = qa.invoke(input={"input": query})
+    qa = create_retrieval_chain(history_aware_retriever, combine_docs_chain = combine_docs_chain)
+    
+    result = qa.invoke(input={"input": query, "chat_history": chat_history})
     new_result = {
         "query": result["input"],
         "result": result["answer"],
