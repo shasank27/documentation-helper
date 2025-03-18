@@ -11,6 +11,7 @@ langchain = "*"
 python-dotenv = "*"
 langchain-community = "*"
 streamlit = "*"
+firecrawl-py = "*"
 
 [dev-packages]
 
